@@ -1,0 +1,60 @@
+Documentation for PINTOS Project 1
+
+
+Alarm Clock
+============
+
+1.Data Structures 
+int64_t ticks_to_sleep;      /* Added to thread.h */ 
+     /*This variable will hold each thread's number of ticks to 
+       sleep. The value will be given when timer_sleep()is        
+       called */
+
+2.Algorithm
+timer_sleep(int64_t sleep_ticks) is implemented by giving the value of sleep_ticks to the ticks_to_sleep of the thread which called the function
+
+Interrupts are then disabled to allow blocking with interruptions. The thread is blocked and thus sent to the waiting list. Interrupts are again switched on.
+
+In the external interrupt handler function timer_interrupt(), a check is done on each thread to see if it has completed it's sleeping time.
+
+This is done by using a thread_foreach() function defined in list.c which accepts a function to run on each thread 
+
+A function wake_thread()is defined and passed as the argument to thread_foreach()
+
+This wake_thread function checks if the thread status is THREAD_BLOCKED. If it is then it checks the threads value of ticks_to_sleep.
+
+If the value is greater than 0 then it decrements it by one. If the value is zero then it thread_unblock()
+
+3.Synchronization
+Since the code for thread_unblock runs in an external interrupt handler we disable interrupts to prevent race conditons
+
+4.Rationale
+This design has the advantage of being very simple. The thrad is being blocked and the scheduler can continue with it's job without busy waiting.
+
+Once the thread has finished waiting for it's sleep time to end, it gets unblocked and moved onto the ready list.
+
+
+
+
+Priority Scheduler
+
+1)Data Structures
+No extra data structures are being used as such
+
+2)Algorithm
+The existing round-robin scheduler pops the thread at the head of the ready list when it needs to select the next thread to run.
+
+My implementation is mostly in the next_thread_to_run() function where I have popped the thread which has the highest priority
+
+This is being done by the function list_max() which uses a function 'less' to determine which thread in the ready list has the highest priority.
+
+So every time schedule() calls next_thread_to_run(), it returns the thread with the highest priority in the ready list.
+
+3)Synchronization
+     Synchronization is not an issue here
+
+Please note: There is a certain run time error happening while running my code for priority scheduler. For some reason this messes with my alarm clock implementation causing other tests to fail. So i have commented out my implementation (lines 485-512) in thread.c
+
+4)Rationale
+Very simple algorithm that achieves priority scheduling with minimum coding 
+It makes use of the functions which are already defined thus reducing the need for creating more functions
